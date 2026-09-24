@@ -3,136 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>高息 ETF 退休儀表板</title>
+  <title>高息 ETF 退休現金流</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="top">
-    <div>
-      <p class="eyebrow">退休現金流</p>
-      <h1>我的 ETF 儀表板</h1>
-    </div>
-    <p class="lead">用高股息 ETF 估計：現在每月能領多少，離你想要的生活費還差多少錢。</p>
-  </header>
-
-  <section class="dash">
-    <article class="gauge-card">
-      <h2>投資達成率</h2>
-      <p class="fine">指針看的是：現在投入的錢，占「要投資多少」的比例。</p>
-      <div class="gauge">
-        <svg viewBox="0 0 320 190" aria-hidden="true">
-          <path d="M30 160 A130 130 0 0 1 290 160" class="track"></path>
-          <path id="arc" d="M30 160 A130 130 0 0 1 290 160" class="fill"></path>
-          <g id="needle">
-            <line x1="160" y1="160" x2="160" y2="48"></line>
-            <circle cx="160" cy="160" r="8"></circle>
-          </g>
-        </svg>
-        <p id="gauge-num" class="gauge-num">0%</p>
-        <p id="gauge-say" class="gauge-say"></p>
+  <div id="app">
+    <header class="top">
+      <div>
+        <p class="eyebrow">退休規劃</p>
+        <h1>高息 ETF 退休現金流</h1>
       </div>
-    </article>
+    </header>
+    <main>
+      <section class="panel">
+        <h2>所得與替代率</h2>
+        <div class="grid-3">
+          <label>每月工作所得（元）
+            <input id="salary" type="number" min="0" step="1000" value="60000">
+          </label>
+          <label>目標所得替代率（%）
+            <input id="rate" type="number" min="1" max="300" step="1" value="100">
+          </label>
+          <label>配息估算方式
+            <select id="source">
+              <option value="sheet">試算表：最新配息年化</option>
+              <option value="market">網路：近 12 個月殖利率</option>
+            </select>
+          </label>
+        </div>
+        <p id="target-line" class="target-line"></p>
+      </section>
 
-    <div class="metrics">
-      <article class="metric">
-        <span>要投資多少</span>
-        <strong id="need">—</strong>
-        <p>想讓每月配息達到目標，總共大約要準備的錢。已把股數湊成整張。</p>
-      </article>
-      <article class="metric">
-        <span>目前已投資多少</span>
-        <strong id="have">—</strong>
-        <p>你現在持有的張數，用目前市價算出來的金額。</p>
-      </article>
-      <article class="metric">
-        <span>目前每月可以收益多少</span>
-        <strong id="now-pay">—</strong>
-        <p>一年配息除以 12。這是平均每月，不是每個月都會入帳同一筆。</p>
-      </article>
-      <article class="metric goal">
-        <span>目標收益</span>
-        <strong id="goal-pay">—</strong>
-        <p>每月薪水乘上替代率。100% 就是退休後每月想領到跟現在薪水一樣。</p>
-      </article>
-    </div>
-  </section>
+      <section class="panel">
+        <div class="row-head">
+          <h2>ETF 投資組合</h2>
+          <button type="button" id="add-row" class="ghost">加一檔</button>
+        </div>
+        <p class="fine">最多 8 檔。配置比例合計要 100%，才估算達標本金。目前張數用來算你已經有的配息。1 張 = 1,000 股。數字一改，JavaScript 會立刻重算。</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ETF</th>
+                <th>配置 %</th>
+                <th>目前張數</th>
+                <th>市價</th>
+                <th>年化殖利率</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <p id="weight-note" class="error"></p>
+        <div class="actions">
+          <button type="button" id="save" class="primary">儲存這個組合</button>
+          <button type="button" id="reset" class="ghost">恢復範例組合</button>
+        </div>
+      </section>
 
-  <section class="explain" id="explain"></section>
+      <section class="cards" id="cards"></section>
+      <p id="plain" class="fine plain"></p>
 
-  <section class="panel">
-    <h2>你的目標</h2>
-    <div class="grid-3">
-      <label>每月薪水（元）
-        <input id="salary" type="number" min="0" step="1000" value="60000">
-      </label>
-      <label>希望替代幾成薪水（%）
-        <input id="rate" type="number" min="1" max="300" step="1" value="100">
-      </label>
-      <label>配息怎麼估
-        <select id="source">
-          <option value="sheet">用最新一次配息來估</option>
-          <option value="market">用過去一年實際配息來估</option>
-        </select>
-      </label>
-    </div>
-  </section>
+      <section class="panel">
+        <h2>各檔還要買多少</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ETF</th>
+                <th>目前張數</th>
+                <th>達標張數</th>
+                <th>還要買</th>
+                <th>加碼金額</th>
+                <th>預估年配息</th>
+              </tr>
+            </thead>
+            <tbody id="plan"></tbody>
+          </table>
+        </div>
+      </section>
 
-  <section class="panel">
-    <div class="row-head">
-      <h2>我的 ETF</h2>
-      <button type="button" id="add-row" class="ghost">加一檔</button>
-    </div>
-    <p class="fine">ETF 就是一次買進一籃股票。高股息代表這些公司比較常把賺到的錢分給你。比例要加總到 100%。1 張 = 1,000 股。</p>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>哪一檔</th>
-            <th>占多少比例</th>
-            <th>現在有幾張</th>
-            <th>一股多少錢</th>
-            <th>一年大約配幾 %</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
-    <p id="weight-note" class="error"></p>
-    <div class="actions">
-      <button type="button" id="save" class="primary">記住這個組合</button>
-      <button type="button" id="reset" class="ghost">回到範例</button>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>還要再買多少</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>ETF</th>
-            <th>現在張數</th>
-            <th>達標張數</th>
-            <th>還要買</th>
-            <th>還要花的錢</th>
-            <th>買完後一年配息</th>
-          </tr>
-        </thead>
-        <tbody id="plan"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>達標後，一年裡每個月大概會領到</h2>
-    <p class="fine">假設以後每次配息都跟最近一次一樣。還沒扣稅和手續費。</p>
-    <div id="months" class="months"></div>
-  </section>
-
-  <footer>
-    價格取自試算表（2026-09-23）。有查到的代號可改看過去一年配息（2026-09-24）。配息會變，這只是試算，不是投資建議。
-  </footer>
+      <section class="panel">
+        <h2>達標後 12 個月現金流</h2>
+        <p class="fine">假設每次配息都等於最新一次每單位配息，稅前，未扣手續費與稅。</p>
+        <div id="months" class="months"></div>
+      </section>
+    </main>
+    <footer>
+      試算表市價日期 2026-09-23。網路行情摘自公開頁面，日期 2026-09-24，只覆蓋有查到的代號。配息會變，過去配息不代表未來。本工具不構成投資建議。
+    </footer>
+  </div>
   <script src="data.js"></script>
   <script src="app.js"></script>
 </body>

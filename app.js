@@ -1,13 +1,12 @@
-const PLAN_KEY = "etf_dash_v1";
+const PLAN_KEY = "etf_plan_light_v1";
 const LOT = window.ETF_DATA.lotSize;
-const ARC = 408;
 const $ = (id) => document.getElementById(id);
 
 function money(n) {
-  return Math.round(n).toLocaleString("zh-TW") + " 元";
+  return Math.round(n).toLocaleString("zh-TW");
 }
 function pct(n) {
-  return (n * 100).toFixed(1) + "%";
+  return (n * 100).toFixed(2) + "%";
 }
 function etfMap() {
   return Object.fromEntries(window.ETF_DATA.list.map((e) => [e.code, e]));
@@ -59,35 +58,47 @@ function calculate(plan) {
   const lines = plan.rows.filter((r) => map[r.code]).map((r) => {
     const etf = map[r.code];
     const q = quote(etf, plan.source);
-    return { ...r, etf, ...q, currentCost: r.lots * LOT * q.price, currentAnnual: r.lots * LOT * q.div * etf.times };
+    return {
+      ...r,
+      etf,
+      ...q,
+      currentCost: r.lots * LOT * q.price,
+      currentAnnual: r.lots * LOT * q.div * etf.times
+    };
   });
   const weight = lines.reduce((s, r) => s + r.weight, 0);
   const yieldSum = lines.reduce((s, r) => s + (r.weight / 100) * r.yieldRate, 0);
   const ready = Math.abs(weight - 100) < 0.01 && lines.length > 0 && yieldSum > 0;
   const currentCost = lines.reduce((s, r) => s + r.currentCost, 0);
   const currentAnnual = lines.reduce((s, r) => s + r.currentAnnual, 0);
+  const currentMonthly = currentAnnual / 12;
   const targetMonthly = plan.salary * (plan.rate / 100);
   const targetAnnual = targetMonthly * 12;
   const theoretical = ready ? targetAnnual / yieldSum : 0;
   const detailed = lines.map((r) => {
     const targetLots = ready ? Math.ceil(theoretical * (r.weight / 100) / (r.price * LOT) - 1e-9) : r.lots;
     const extraLots = Math.max(0, targetLots - r.lots);
-    const futureLots = r.lots + extraLots;
     return {
       ...r,
       targetLots,
       extraLots,
       extraCost: extraLots * LOT * r.price,
-      futureAnnual: futureLots * LOT * r.div * r.etf.times
+      futureLots: r.lots + extraLots,
+      futureAnnual: (r.lots + extraLots) * LOT * r.div * r.etf.times
     };
   });
   const need = ready ? currentCost + detailed.reduce((s, r) => s + r.extraCost, 0) : 0;
   const months = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
-    const amount = detailed.reduce((s, r) => (r.etf.months.includes(month) ? s + (r.lots + r.extraLots) * LOT * r.div : s), 0);
+    const amount = detailed.reduce((s, r) => (
+      r.etf.months.includes(month) ? s + r.futureLots * LOT * r.div : s
+    ), 0);
     return { month, amount };
   });
-  return { lines: detailed, weight, ready, currentCost, currentAnnual, currentMonthly: currentAnnual / 12, targetMonthly, need, months };
+  return {
+    lines: detailed, weight, ready, currentCost, currentAnnual, currentMonthly,
+    targetMonthly, targetAnnual, need, months
+  };
 }
 function renderRows(rows) {
   const options = window.ETF_DATA.list.map((e) => `<option value="${e.code}">${e.code} ${e.name}</option>`).join("");
@@ -101,13 +112,9 @@ function renderRows(rows) {
       <td><button type="button" class="linkish remove">移除</button></td>
     </tr>
   `).join("");
-  [...$("rows").querySelectorAll("tr")].forEach((tr, i) => { tr.querySelector(".code").value = rows[i].code; });
-}
-function setGauge(ratio) {
-  const clamped = Math.max(0, Math.min(ratio, 1));
-  $("arc").style.strokeDashoffset = String(ARC * (1 - clamped));
-  $("needle").style.transform = `rotate(${-90 + clamped * 180}deg)`;
-  $("gauge-num").textContent = pct(ratio);
+  [...$("rows").querySelectorAll("tr")].forEach((tr, i) => {
+    tr.querySelector(".code").value = rows[i].code;
+  });
 }
 function render() {
   const plan = readForm();
@@ -118,21 +125,18 @@ function render() {
     tr.querySelector(".px").textContent = q.price.toFixed(2);
     tr.querySelector(".yd").textContent = pct(q.yieldRate);
   });
-  const ratio = result.ready && result.need > 0 ? result.currentCost / result.need : 0;
-  setGauge(ratio);
-  $("gauge-say").textContent = result.ready
-    ? (ratio >= 1 ? "已經夠了，以現在的估法，每月配息可以達到目標。" : "還沒到。指針往右，代表離目標更近。")
-    : "先把各檔比例加總到 100%，指針才會動。";
-  $("need").textContent = result.ready ? money(result.need) : "請把比例加到 100%";
-  $("have").textContent = money(result.currentCost);
-  $("now-pay").textContent = money(result.currentMonthly);
-  $("goal-pay").textContent = money(result.targetMonthly);
-  const gap = result.ready ? Math.max(0, result.need - result.currentCost) : 0;
-  $("explain").innerHTML = result.ready
-    ? `<p>簡單說：你希望每月領 <b>${money(result.targetMonthly)}</b>。現在這些 ETF 平均每月約 <b>${money(result.currentMonthly)}</b>。</p>
-       <p>要補上這個差距，還要再投入大約 <b>${money(gap)}</b>。總共要準備 <b>${money(result.need)}</b>，你已經有 <b>${money(result.currentCost)}</b>。</p>`
-    : `<p>各檔比例現在合計 ${result.weight}%。加到 100% 之後，才算得出要投資多少。</p>`;
-  $("weight-note").textContent = result.ready ? "" : `比例合計 ${result.weight}%，要到 100%。`;
+  $("weight-note").textContent = result.ready ? "" : `配置合計 ${result.weight}% ，要到 100% 才估算要投資多少。目前持股的配息仍會計算。`;
+  $("target-line").textContent = `目標收益是每月 ${money(result.targetMonthly)} 元（所得 ${money(plan.salary)} × ${plan.rate}%），全年 ${money(result.targetAnnual)} 元。`;
+  const rate = result.ready && result.need > 0 ? result.currentCost / result.need : 0;
+  $("cards").innerHTML = `
+    <article class="card need"><span>要投資多少</span><b>${result.ready ? money(result.need) : "—"}</b></article>
+    <article class="card"><span>目前已投資多少</span><b>${money(result.currentCost)}</b></article>
+    <article class="card"><span>目前每月可以收益多少</span><b>${money(result.currentMonthly)}</b></article>
+    <article class="card"><span>目標收益（每月）</span><b>${money(result.targetMonthly)}</b></article>
+  `;
+  $("plain").textContent = result.ready
+    ? `達成率 ${pct(rate)}。已投入的錢占達標本金的比例。還要再投入 ${money(Math.max(0, result.need - result.currentCost))} 元，每月配息才會接近目標。平均每月收益是一年配息除以 12，不是每個月都入帳同一筆。`
+    : "把配置比例加到 100% 後，就會算出要投資多少。";
   $("plan").innerHTML = result.lines.map((r) => `
     <tr>
       <td>${r.code} ${r.etf.name}</td>
@@ -146,8 +150,8 @@ function render() {
   const max = Math.max(...result.months.map((m) => m.amount), 1);
   $("months").innerHTML = result.months.map((m) => `
     <div class="bar">
-      <strong>${m.amount ? Math.round(m.amount).toLocaleString("zh-TW") : ""}</strong>
-      <i style="height:${Math.max(4, (m.amount / max) * 120)}px"></i>
+      <strong>${m.amount ? money(m.amount) : ""}</strong>
+      <i style="height:${Math.max(4, (m.amount / max) * 130)}px"></i>
       <em>${m.month}月</em>
     </div>
   `).join("");
@@ -180,8 +184,8 @@ $("add-row").onclick = () => {
 };
 $("save").onclick = () => {
   localStorage.setItem(PLAN_KEY, JSON.stringify(readForm()));
-  $("save").textContent = "已記住";
-  setTimeout(() => { $("save").textContent = "記住這個組合"; }, 1200);
+  $("save").textContent = "已儲存";
+  setTimeout(() => { $("save").textContent = "儲存這個組合"; }, 1200);
 };
 $("reset").onclick = () => {
   localStorage.removeItem(PLAN_KEY);
