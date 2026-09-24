@@ -1,4 +1,4 @@
-const PLAN_KEY = "etf_plan_light_v1";
+const PLAN_KEY = "etf_plan_light_v2";
 const LOT = window.ETF_DATA.lotSize;
 const $ = (id) => document.getElementById(id);
 
@@ -27,9 +27,9 @@ function defaultPlan() {
     rate: 100,
     source: "sheet",
     rows: [
-      { code: "0056", weight: 40, lots: 0 },
-      { code: "00878", weight: 40, lots: 0 },
-      { code: "00919", weight: 20, lots: 0 }
+      { code: "0050", weight: 40, lots: 0 },
+      { code: "0056", weight: 30, lots: 0 },
+      { code: "00878", weight: 30, lots: 0 }
     ]
   };
 }

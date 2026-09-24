@@ -10,6 +10,7 @@ window.ETF_DATA = {
   lotSize: 1000,
   list: [
     { code: "0050", name: "元大台灣50", freq: "半年配", times: 2, months: [1, 7], div: 0.6, exDate: "2026-07-21", price: 112.4, marketPrice: 112.4, marketYield: 0.01423 },
+    { code: "0056", name: "元大高股息", freq: "季配", times: 4, months: [1, 4, 7, 10], div: 1.35, exDate: "2026-07-21", price: 56.6, marketPrice: 55.75, marketYield: 0.07322 },
     { code: "00878", name: "國泰永續高股息", freq: "季配", times: 4, months: [2, 5, 8, 11], div: 1.01, exDate: "2026-08-18", price: 35.09, marketPrice: 34.07, marketYield: 0.073085 },
     { code: "00900", name: "富邦特選高股息30", freq: "月配", times: 12, months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], div: 0.075, exDate: "2026-09-16", price: 19.58, marketPrice: 19.54, marketYield: 0.049898 },
     { code: "00907", name: "永豐優息存股", freq: "雙月配", times: 6, months: [2, 4, 6, 8, 10, 12], div: 0.24, exDate: "2026-08-25", price: 17.83 },
