@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>高息 ETF 退休現金流</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="auth" class="auth-wrap">
+    <section class="auth-card">
+      <p class="eyebrow">退休規劃</p>
+      <h1>高息 ETF 現金流試算</h1>
+      <p class="lead">登入後輸入投資組合，試算每年配息，以及要再投入多少本金，才達到你設定的所得替代率。</p>
+      <div class="tabs">
+        <button type="button" id="tab-login" class="tab on">登入</button>
+        <button type="button" id="tab-register" class="tab">註冊</button>
+      </div>
+      <form id="login-form">
+        <label>帳號<input name="username" autocomplete="username" required></label>
+        <label>密碼<input name="password" type="password" autocomplete="current-password" required></label>
+        <p id="login-error" class="error"></p>
+        <button type="submit" class="primary">登入</button>
+      </form>
+      <form id="register-form" hidden>
+        <label>顯示名稱<input name="name" required></label>
+        <label>帳號<input name="username" autocomplete="username" required></label>
+        <label>密碼（至少 6 碼）<input name="password" type="password" minlength="6" autocomplete="new-password" required></label>
+        <label>再輸入一次密碼<input name="password2" type="password" minlength="6" required></label>
+        <p id="register-error" class="error"></p>
+        <button type="submit" class="primary">建立帳號</button>
+      </form>
+      <p class="fine">帳號只存在這台瀏覽器。此頁是試算工具，不是投顧建議。</p>
+    </section>
+  </div>
+
+  <div id="app" hidden>
+    <header class="top">
+      <div>
+        <p class="eyebrow">會員試算</p>
+        <h1>高息 ETF 退休現金流</h1>
+      </div>
+      <div class="who">
+        <span id="who"></span>
+        <button type="button" id="logout" class="ghost">登出</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2>所得與替代率</h2>
+        <div class="grid-3">
+          <label>每月工作所得（元）
+            <input id="salary" type="number" min="0" step="1000" value="60000">
+          </label>
+          <label>目標所得替代率（%）
+            <input id="rate" type="number" min="1" max="300" step="1" value="100">
+          </label>
+          <label>配息估算方式
+            <select id="source">
+              <option value="sheet">試算表：最新配息年化</option>
+              <option value="market">網路：近 12 個月殖利率</option>
+            </select>
+          </label>
+        </div>
+        <p id="target-line" class="target-line"></p>
+      </section>
+
+      <section class="panel">
+        <div class="row-head">
+          <h2>ETF 投資組合</h2>
+          <button type="button" id="add-row" class="ghost">加一檔</button>
+        </div>
+        <p class="fine">最多 8 檔。配置比例合計要 100%，才估算達標本金。目前張數用來算你已經有的配息。1 張 = 1,000 股。</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ETF</th>
+                <th>配置 %</th>
+                <th>目前張數</th>
+                <th>市價</th>
+                <th>年化殖利率</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <p id="weight-note" class="error"></p>
+        <div class="actions">
+          <button type="button" id="save" class="primary">儲存這個組合</button>
+          <button type="button" id="reset" class="ghost">恢復範例組合</button>
+        </div>
+      </section>
+
+      <section class="cards" id="cards"></section>
+
+      <section class="panel">
+        <h2>各檔還要買多少</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ETF</th>
+                <th>目前張數</th>
+                <th>達標張數</th>
+                <th>還要買</th>
+                <th>加碼金額</th>
+                <th>預估年配息</th>
+              </tr>
+            </thead>
+            <tbody id="plan"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>達標後 12 個月現金流</h2>
+        <p class="fine">假設每次配息都等於最新一次每單位配息，稅前，未扣手續費與稅。</p>
+        <div id="months" class="months"></div>
+      </section>
+
+      <section id="admin" class="panel" hidden>
+        <h2>管理者</h2>
+        <p class="fine">這裡只看得到這台瀏覽器註冊的會員。換電腦或清掉網站資料就會消失。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>帳號</th><th>名稱</th><th>角色</th></tr></thead>
+            <tbody id="members"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <footer>
+      試算表市價日期 2026-09-23。網路行情摘自公開頁面，日期 2026-09-24，只覆蓋有查到的代號。配息會變，過去配息不代表未來。本工具不構成投資建議。
+    </footer>
+  </div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
